@@ -11,8 +11,11 @@ set -euo pipefail
 IMAGE="nvcr.io/nvidia/isaac-sim:5.1.0"
 CONTAINER_NAME="isaac-sim-g1"
 CACHE_DIR="$HOME/.cache/isaac-sim"
-WORKSPACE_DIR="$HOME/projects/g1-rl/workspace"
-SIM_REPO_DIR="$HOME/projects/g1-rl/sim"
+# 项目根目录 = 本脚本所在目录的上一级；克隆到哪里都行，可用 G1_RL_ROOT 覆盖。
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJ_DIR="${G1_RL_ROOT:-$(cd "${SCRIPT_DIR}/.." && pwd)}"
+WORKSPACE_DIR="${PROJ_DIR}/workspace"
+SIM_REPO_DIR="${PROJ_DIR}/sim"
 MODE="${1:-shell}"
 
 mkdir -p "$CACHE_DIR"/{kit,ov,pip,glcache,computecache,logs,data,documents}
