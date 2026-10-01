@@ -41,10 +41,31 @@ class PlayConfig:
     num_envs = 8
 
 
+class DeployConfig:
+    """真机部署 (deploy) 参数"""
+
+    # ── 训练 Run 名称 ────────────────────────────────────────────────────
+    # logs/rsl_rl/unitree_g1_29dof_velocity/ 下的时间戳目录名
+    run_name = "2026-06-24_09-29-56"
+
+    # ── Checkpoint 文件名 ──────────────────────────────────────────────────
+    # 要导出为 ONNX 的模型 checkpoint
+    checkpoint = "model_18100"
+
+    # ── 机器人 IP 地址 ─────────────────────────────────────────────────────
+    # G1 机器人无线网卡的 IP（通过 ifconfig 查看）
+    robot_ip = "192.168.123.161"
+
+    # ── 机器人上的部署路径 ─────────────────────────────────────────────────
+    # deploy/ 目录会被 rsync 到这个路径
+    robot_deploy_path = "~/g1-rl-deploy"
+
+
 class G1Config:
     """G1 训练总配置 — 按功能分组"""
     train = TrainConfig()
     play = PlayConfig()
+    deploy = DeployConfig()
 
 
 # 全局单例，导入即用

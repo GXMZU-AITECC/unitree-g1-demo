@@ -1,0 +1,10 @@
+# ONNX Runtime — downloaded by install_onnxruntime.sh, do NOT commit
+thirdparty/onnxruntime-linux-x64-*/
+
+# Build artifacts
+g1_29dof/build/
+
+# Policy artifacts (student-exported ONNX/pt models, not for git)
+g1_29dof/config/policy/velocity/*/exported/
+g1_29dof/config/policy/**/*.onnx
+g1_29dof/config/policy/**/*.pt

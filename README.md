@@ -31,7 +31,7 @@
 
 ```bash
 # 1. 拿到菜谱
-git clone git@github.com:GXMZUAILAB/unitree-g1.git ~/projects/g1-rl
+git clone git@github.com:GXMZU-AITECC/unitree-g1-demo.git ~/projects/g1-rl
 cd ~/projects/g1-rl
 
 # 2. 搭厨房（拉取 Isaac Sim 镜像，23GB，首次约 30 分钟；国内代理下可能更久）
@@ -55,6 +55,7 @@ bash scripts/start.sh train     # 开始训练
 | 🟡 | [2_fundamentals/](2_fundamentals/) | Python+NumPy 速览、Jupyter 怎么用、Q-Learning→DQN、PyTorch 搭网络、bash 脚本怎么读 | 想看代码怎么写的 |
 | 🟠 | [3_g1_project/](3_g1_project/) | 项目架构全景图、逐行读 start.sh、训练输出解读、配置参数调优、回放与导出 | 跑训练时碰到问题来看 |
 | 🔴 | [4_advanced/](4_advanced/) | Git 多人协作、Docker 镜像构建与推送、VS Code 一键环境、多机部署 | 要做比赛/团队协作时看 |
+| 🟣 | [5_deployment/](5_deployment/) | ONNX 导出、C++ 编译、FSM 状态机、dDS 通信、真机部署实战 | 部署到真机时看 |
 
 ---
 
@@ -67,13 +68,15 @@ unitree-g1/
 ├── 2_fundamentals/        # 🟡 基础实操：Python、Jupyter、RL算法、PyTorch、bash
 ├── 3_g1_project/          # 🟠 项目实战：架构、start.sh解读、训练、配置
 ├── 4_advanced/            # 🔴 拓展：Git协作、Docker深入、竞赛部署
+├── 5_deployment/          # 🟣 真机部署：ONNX导出、C++编译、FSM状态机
 ├── notebooks/             # 📓 交互式 Python Notebook（填空式学习）
 ├── showcase/              # 🏆 成果展示：训练GIF、截图（文件名即描述）
 ├── docs/                  # 📋 项目文档：训练记录、硬件实测、失败分析、架构笔记
-├── scripts/               # 🔧 一键脚本（你天天跑的）
+├── scripts/               # 🔧 一键脚本（start.sh 训练 / deploy.sh 部署）
+├── deploy/                # 🤖 真机部署工具包（C++ 源码、ONNX Runtime 脚本）
 ├── docker/                # 🐳 Dockerfile + compose 配置
 ├── .devcontainer/         # 🖥️ VS Code 开发容器
-└── sim/                   # 🤖 依赖仓库（gitignored，每台机器自行克隆）
+└── sim/                   # 🔬 依赖仓库（gitignored，每台机器自行克隆）
 ```
 
 ---
@@ -81,12 +84,19 @@ unitree-g1/
 ## 🔧 常用命令
 
 ```bash
+# ── 仿真训练 ──
 bash scripts/start.sh                    # 交互式菜单
 bash scripts/start.sh install            # 安装依赖（首次）
 bash scripts/start.sh train              # 无头训练
 bash scripts/start.sh train-gui          # 带 3D 画面训练
 bash scripts/start.sh play <run> <ckpt>  # 回放模型
 tensorboard --logdir ~/projects/g1-rl/logs/rsl_rl/unitree_g1_29dof_velocity --bind_all --port 6006
+
+# ── 真机部署 ──
+bash scripts/deploy.sh export            # 导出 ONNX 模型
+bash scripts/deploy.sh push <robot_ip>   # 推送到 G1 机器人
+bash scripts/deploy.sh install           # 安装 ONNX Runtime
+bash scripts/deploy.sh build             # 编译 C++ 控制器
 ```
 
 ---
@@ -121,6 +131,7 @@ tensorboard --logdir ~/projects/g1-rl/logs/rsl_rl/unitree_g1_29dof_velocity --bi
 | Python | 3.10 (Docker 容器内置) | Isaac Sim 自带，不需要自己装 |
 | RSL-RL | 5.0.1 | ETH 的 PPO 算法实现 |
 | PyTorch | (Isaac Sim 内置) | 神经网络框架 |
+| ONNX Runtime | 1.22.0 | C++ 模型推理引擎（真机部署用） |
 | ROS 2 | Lyrical Luth | 实机部署（可选） |
 
 ---

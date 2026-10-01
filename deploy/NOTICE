@@ -1,0 +1,48 @@
+G1 real-robot deployment sources — attribution notice
+=====================================================
+
+Copyright 2026 GXMZU-AITECC (广西民族大学 人工智能科技社)
+
+This product includes software developed as a derivative work of
+`unitree_rl_lab` (https://github.com/unitreerobotics/unitree_rl_lab),
+Copyright (c) Unitree Robotics, licensed under the Apache License, Version 2.0.
+The full licence text is in `deploy/LICENSE`.
+
+What was taken (verified by content hash against upstream `main`)
+-----------------------------------------------------------------
+* `deploy/include/**` — copied unchanged from upstream `deploy/include/**`.
+* `deploy/g1_29dof/main.cpp`, `include/Types.h`, `src/State_RLBase.cpp`,
+  `src/State_Mimic.cpp`, `include/State_Mimic.h` — copied unchanged from
+  upstream `deploy/robots/g1_29dof/**` (directory flattened: the `robots/`
+  level was dropped so the tutorial can refer to `deploy/g1_29dof/`).
+* 22 files in total are byte-identical to upstream.
+
+What we changed (Apache-2.0 §4(b): these files carry our modifications)
+-----------------------------------------------------------------------
+1. `deploy/g1_29dof/CMakeLists.txt`
+   a) ONNX Runtime location is now taken from the `ONNXRUNTIME_ROOT` environment
+      variable when it is set, and only falls back to the bundled
+      `thirdparty/onnxruntime-linux-x64-1.22.0` path when it is not. Reason: our
+      students install ONNX Runtime through `deploy/install_onnxruntime.sh`, which
+      may place it in their home directory.
+   b) Added two configure-time existence checks (header + shared library) that
+      abort with the exact commands to run. Upstream configures happily even when
+      the directory is missing, and the failure only shows up later as
+      `fatal error: onnxruntime_cxx_api.h: No such file or directory` during
+      `make` — which students cannot connect back to the cause.
+
+2. `deploy/g1_29dof/config/config.yaml`
+   The two Mimic FSM entries (`Mimic_Dance_102`, `Mimic_Gangnam_Style`) and
+   their joystick transitions are commented out by default, with an inline
+   note explaining how to re-enable them. Reason: they require a Mimic policy
+   and a motion-capture CSV that this teaching repository does not ship; an
+   out-of-the-box student build otherwise selects a state with no model behind
+   it.
+
+What we added
+-------------
+* `deploy/install_onnxruntime.sh` — downloads ONNX Runtime 1.22.0 on the robot.
+* `deploy/README.md`, `deploy/.gitignore`, `deploy/thirdparty/.gitkeep`,
+  `deploy/g1_29dof/config/policy/velocity/v0/.gitkeep`.
+
+This derivative work is licensed under the Apache License, Version 2.0.

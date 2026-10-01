@@ -1,0 +1,35 @@
+name: docs-and-scripts
+
+# 便宜且能挡住最常见的一类返工：内链断了、脚本改崩了语法。
+# 本地先跑一遍再提 PR：
+#   python3 scripts/check_links.py .
+#   bash -n scripts/*.sh
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Relative links resolve
+        run: python3 scripts/check_links.py . --verbose
+
+      - name: Shell scripts parse
+        run: |
+          shopt -s nullglob
+          for f in scripts/*.sh deploy/*.sh; do
+            echo "bash -n $f"
+            bash -n "$f"
+          done
+
+      - name: Python files parse
+        run: python3 -m compileall -q scripts configs

@@ -27,12 +27,16 @@ set -euo pipefail
 TRAIN_TASK="${TRAIN_TASK:-}"
 
 # ── Docker / paths ────────────────────────────────────────────────────────
+# 项目根目录 = 本脚本所在目录的上一级。仓库克隆到哪里都行，
+# 不再要求固定放在 ~/projects/g1-rl。想放到别处可以设 G1_RL_ROOT。
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJ_DIR="${G1_RL_ROOT:-$(cd "${SCRIPT_DIR}/.." && pwd)}"
 IMAGE="nvcr.io/nvidia/isaac-sim:5.1.0"
-SIM_DIR="${HOME}/projects/g1-rl/sim"
+SIM_DIR="${PROJ_DIR}/sim"
 CACHE_DIR="${HOME}/.cache/isaac-sim"
-LOG_DIR="${HOME}/projects/g1-rl/logs"
+LOG_DIR="${PROJ_DIR}/logs"
 PIP_PKGS_DIR="${CACHE_DIR}/pip_pkgs"
-CONFIGS_DIR="${HOME}/projects/g1-rl/configs"
+CONFIGS_DIR="${PROJ_DIR}/configs"
 PIP_MIRROR="https://pypi.tuna.tsinghua.edu.cn/simple"
 
 EXTRA_PYTHONPATH="/sim/IsaacLab/source/isaaclab:/sim/IsaacLab/source/isaaclab_rl:/sim/IsaacLab/source/isaaclab_tasks:/isaac-sim/pip_pkgs:/sim/unitree_rl_lab/source/unitree_rl_lab:/configs"
@@ -44,6 +48,60 @@ BLUE='\033[0;34m'; CYAN='\033[0;36m'; NC='\033[0m'
 mkdir -p "${CACHE_DIR}"/{kit,ov,pip,glcache,computecache,logs,data,documents}
 mkdir -p "${PIP_PKGS_DIR}"
 mkdir -p "${LOG_DIR}"
+
+# ── Preflight：依赖仓库与配置文件先到位 ──────────────────────────────────
+# 以前这些路径写死在 ~/projects/g1-rl，克隆到别处时 Docker 会静默挂载一个
+# 空目录，最后报的是容器里 ModuleNotFoundError: g1_config —— 新手无从下手。
+# 现在直接把缺什么、去哪儿补，说清楚。
+MODE="${1:-menu}"
+require_sim() {
+    local missing=() soft=0
+    [[ "${MODE}" == "menu" ]] && soft=1
+    [[ -d "${SIM_DIR}/unitree_rl_lab" ]] || missing+=("unitree_rl_lab")
+    [[ -d "${SIM_DIR}/IsaacLab" ]]       || missing+=("IsaacLab")
+    [[ -f "${CONFIGS_DIR}/g1_config.py" ]] || missing+=("configs/g1_config.py(不在仓库里？确认你在仓库目录内执行)")
+    (( ${#missing[@]} )) || return 0
+    echo -e "${RED}缺少：${missing[*]}${NC}"
+    echo "项目目录：${PROJ_DIR}（可用 G1_RL_ROOT 覆盖）"
+    echo "补齐办法（教程 1.5）："
+    echo "  mkdir -p ${SIM_DIR} && cd ${SIM_DIR}"
+    echo "  git clone https://github.com/unitreerobotics/unitree_rl_lab.git"
+    echo "  git clone https://github.com/isaac-sim/IsaacLab.git"
+    if (( soft )); then
+        echo -e "${YELLOW}（只是看菜单，不拦你；真要跑训练前必须先补齐）${NC}"
+        return 0
+    fi
+    return 1
+}
+require_sim
+
+# ── 上游兼容补丁（rsl-rl-lib 5.0.1）──────────────────────────────────────
+# sim/ 里那几个上游脚本必须改 4 处才能在 rsl-rl 5.0.1 上跑起来，逐条取证见
+# docs/upstream-patches.md。以前只写在文档里让人手工改，重克隆一次就全丢。
+SIM_FIXER="${SCRIPT_DIR}/apply_sim_fixes.py"
+host_python() { command -v python3 >/dev/null 2>&1 && echo python3 || echo python; }
+
+apply_sim_fixes() {
+    local py; py="$(host_python)"
+    if [[ ! -f "${SIM_FIXER}" ]]; then
+        echo -e "${YELLOW}找不到 ${SIM_FIXER}，跳过上游补丁。${NC}"; return 0
+    fi
+    echo "Step 3: 上游兼容补丁（rsl-rl-lib 5.0.1）..."
+    "${py}" "${SIM_FIXER}" --sim-root "${SIM_DIR}" \
+        || { echo -e "${RED}补丁没打全，按上面每条的提示人工核对后重试。${NC}"; return 1; }
+    "${py}" "${SIM_FIXER}" --sim-root "${SIM_DIR}" --check \
+        || { echo -e "${RED}补丁复验未通过（--check 仍报未通过项）。${NC}"; return 1; }
+}
+
+warn_sim_fixes() {
+    local py; py="$(host_python)"
+    [[ -f "${SIM_FIXER}" ]] || return 0
+    if ! "${py}" "${SIM_FIXER}" --sim-root "${SIM_DIR}" --check >/dev/null 2>&1; then
+        echo -e "${YELLOW}⚠ sim/ 的上游补丁不完整，这一跑大概率会崩（'PPO' object has no attribute 'policy'"
+        echo -e "   或 TypeError: unexpected keyword argument 'stochastic'）。一行修好：${NC}"
+        echo -e "   ${CYAN}python3 scripts/apply_sim_fixes.py --sim-root ${SIM_DIR}${NC}"
+    fi
+}
 
 DOCKER_BASE="docker run --rm --gpus all --user 0:0 \
   -e ACCEPT_EULA=Y -e OMNI_KIT_ACCEPT_EULA=YES -e OMNI_KIT_ALLOW_ROOT=1 \
@@ -253,6 +311,8 @@ echo ''
 echo 'All dependencies installed.'
 " 2>&1
 
+    echo ""
+    apply_sim_fixes || return 1
     echo -e "${GREEN}Install complete.${NC}"
 }
 
@@ -260,6 +320,7 @@ train() {
     echo -e "${GREEN}=== G1 RL Training (headless) ===${NC}"
     echo -e "Params from: ${CYAN}configs/g1_config.py${NC} (TrainConfig)"
     echo ""
+    warn_sim_fixes
     local task_arg=""
     [[ -n "${TRAIN_TASK:-}" ]] && task_arg="--task ${TRAIN_TASK}"
     run_python "/sim/unitree_rl_lab/scripts/rsl_rl/train.py ${task_arg} --headless"
