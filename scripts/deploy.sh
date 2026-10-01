@@ -16,7 +16,9 @@
 # =============================================================================
 set -euo pipefail
 
-PROJ_DIR="${HOME}/projects/g1-rl"
+# 项目根目录 = 本脚本所在目录的上一级；克隆到哪里都行，可用 G1_RL_ROOT 覆盖。
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJ_DIR="${G1_RL_ROOT:-$(cd "${SCRIPT_DIR}/.." && pwd)}"
 LOG_DIR="${PROJ_DIR}/logs/rsl_rl/unitree_g1_29dof_velocity"
 DEPLOY_DIR="${PROJ_DIR}/deploy"
 POLICY_DIR="${DEPLOY_DIR}/g1_29dof/config/policy/velocity/v0"

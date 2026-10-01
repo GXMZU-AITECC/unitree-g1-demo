@@ -1,0 +1,25 @@
+* text=auto
+
+# 这些文件在 Linux（训练机 / 机器人）上被执行或 source，行尾必须是 LF。
+# 有人从 Windows 改脚本时不被 git 悄悄换成 CRLF。
+*.sh    text eol=lf
+*.py    text eol=lf
+*.yaml  text eol=lf
+*.yml   text eol=lf
+*.md    text eol=lf
+CMakeLists.txt text eol=lf
+*.cpp   text eol=lf
+*.h     text eol=lf
+*.hpp   text eol=lf
+*.toml  text eol=lf
+LICENSE text eol=lf
+NOTICE  text eol=lf
+
+*.onnx  binary
+*.pt    binary
+*.gif   binary
+*.png   binary
+*.jpg   binary
+*.jpeg  binary
+*.tgz   binary
+*.gz    binary

@@ -31,7 +31,7 @@
 
 ```bash
 # 1. 拿到菜谱
-git clone git@github.com:GXMZUAILAB/unitree-g1.git ~/projects/g1-rl
+git clone git@github.com:GXMZU-AITECC/unitree-g1-demo.git ~/projects/g1-rl
 cd ~/projects/g1-rl
 
 # 2. 搭厨房（拉取 Isaac Sim 镜像，23GB，首次约 30 分钟；国内代理下可能更久）

@@ -12,9 +12,10 @@
 | [architecture-notes.md](architecture-notes.md) | CLI 参数流、start.sh 设计决策、参数覆盖链 | 好奇"改了配置为什么不生效" |
 | [reward-design.md](reward-design.md) | 18个 reward term 全景表、权重分析、推荐调整 | 想调 reward 权重 |
 | [troubleshooting.md](troubleshooting.md) | 常见报错速查（补充教程 3.7） | 遇到报错来这里搜 |
+| [upstream-patches.md](upstream-patches.md) | `sim/` 里那四处上游兼容补丁：改什么、怎么判过没过、版本前提 | `install` 报补丁没打全、或换了机器 |
 
 ## 🔗 其他资源
 
-- 教程：从 [0_getting_started/](../0_getting_started/) 到 [4_advanced/](../4_advanced/) 的五层渐进式教程
+- 教程：从 [0_getting_started/](../0_getting_started/) 到 [5_deployment/](../5_deployment/) 的六层渐进式教程
 - 成果展示：[showcase/](../showcase/) — GIF 和训练截图
 - 主 README：[../README.md](../README.md)

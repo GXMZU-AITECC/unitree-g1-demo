@@ -6,7 +6,7 @@ readme = "README.md"
 requires-python = ">=3.10,<3.13"
 license = { text = "MIT" }
 authors = [
-    { name = "GXMZUAILAB" },
+    { name = "GXMZU-AITECC" },
 ]
 
 [project.optional-dependencies]
@@ -16,6 +16,3 @@ training = ["rsl-rl-lib==5.0.1", "gymnasium"]
 [tool.ruff]
 line-length = 100
 target-version = "py310"
-
-[tool.pytest.ini_options]
-testpaths = ["tests"]

@@ -117,27 +117,33 @@ Clash Verge :7897           → Docker daemon HTTP_PROXY + Git SSH ProxyCommand
 
 `start.sh` has this configured: `DOCKER_BASE="docker run --rm --gpus all --user 0:0 ..."`
 
-## rsl-rl-lib 5.0.1 Compatibility Fixes (3 files patched)
+## rsl-rl-lib 5.0.1 Compatibility Fixes (4 sites, automated)
 
-### 1. cli_args.py — parse_rsl_rl_cfg() must call handle_deprecated_rsl_rl_cfg()
-**Why:** The `RslRlMLPModelCfg` dataclass has deprecated `stochastic=MISSING` field. Without calling `handle_deprecated_rsl_rl_cfg()`, `to_dict()` serializes `stochastic` into the dict, and rsl-rl 5.x's `MLPModel.__init__()` rejects it.
-**Where:** `sim/unitree_rl_lab/scripts/rsl_rl/cli_args.py:59-63`
+Do **not** hand-edit these any more. `scripts/apply_sim_fixes.py` does it idempotently;
+`start.sh install` runs it, `start.sh train` warns if it is incomplete.
 
-### 2. play.py — PPO API renamed in rsl-rl 5.x
-**Why:** `PPO.policy` renamed to `PPO.actor`; `PPO.actor_critic` removed entirely.
-**Where:** `sim/unitree_rl_lab/scripts/rsl_rl/play.py:132-150`
-Also: use `runner.export_policy_to_jit/onnx()` (built-in in 5.x) instead of old manual export.
+```bash
+python3 scripts/apply_sim_fixes.py --sim-root <repo>/sim --check   # exit 0 = all four good
+python3 scripts/apply_sim_fixes.py --sim-root <repo>/sim           # apply; second run = all SKIP
+```
 
-### 3. IsaacLab compat layer — hasattr guard for stochastic
-**Why:** `_update_distribution_cfg()` at `utils.py:308` accesses `model_cfg.stochastic` without checking existence. Critic models (deterministic) have `distribution_cfg=None` and no `stochastic` attr.
-**Where:** `sim/IsaacLab/source/isaaclab_rl/isaaclab_rl/rsl_rl/utils.py:309`
-Change: `elif model_cfg.stochastic is True:` → `elif hasattr(model_cfg, "stochastic") and model_cfg.stochastic is True:`
+Per-site rationale, the real upstream state of each anchor (verified 2026-09-30) and the
+IsaacLab version precondition are in `docs/upstream-patches.md`. Short version:
 
-### 4. train.py — duplicate deprecation handler cleaned up
-**Where:** `sim/unitree_rl_lab/scripts/rsl_rl/train.py:131-133`
-train.py had two identical `handle_deprecated_rsl_rl_cfg()` calls, reduced to one.
+1. `unitree_rl_lab/scripts/rsl_rl/cli_args.py` — `parse_rsl_rl_cfg()` must call
+   `handle_deprecated_rsl_rl_cfg(cfg, installed_version)`, otherwise the deprecated
+   `stochastic=MISSING` field reaches `MLPModel.__init__()` and raises TypeError.
+2. `unitree_rl_lab/scripts/rsl_rl/play.py` — rsl-rl 5.x renamed `PPO.policy` → `.actor`
+   and dropped `actor_critic`; export via the runner's own
+   `export_policy_to_jit()` / `export_policy_to_onnx()` (note the exact names).
+3. `IsaacLab/.../isaaclab_rl/rsl_rl/utils.py` — guard `model_cfg.stochastic` with `hasattr`.
+   Upstream `develop` still accesses it unguarded as of 2026-09-27.
+4. `unitree_rl_lab/scripts/rsl_rl/train.py` — exactly ONE `handle_deprecated_rsl_rl_cfg()`
+   call. A fresh clone has zero (also broken); the "two duplicate calls" wording in older
+   notes described a hand-patched local copy.
 
-**IMPORTANT:** If you re-clone unitree_rl_lab or IsaacLab, re-apply all 4 fixes.
+If a site reports `UNMATCHED`, upstream moved: the script prints both the upstream snippet
+it fetched and your file's current region. Fix by hand and tell the maintainers.
 
 ## User Configuration
 
