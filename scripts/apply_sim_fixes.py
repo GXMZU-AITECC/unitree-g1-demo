@@ -433,7 +433,7 @@ TARGETS = [
         "manual": (
             "删除 `# extract the neural network module` 起、至 `export_policy_as_onnx(policy_nn, ...)` 止的整段"
             "(rsl-rl 5.x 已把 PPO.policy 改名 PPO.actor 并删除 actor_critic,该段必然 AttributeError),"
-            "改为使用 rsl-rl 5.0.1 内置导出器(方法实名 export_policy_to_onnx,不是 CLAUDE.md 写的 export_policy_onnx):\n"
+            "改为使用 rsl-rl 5.0.1 内置导出器(方法实名 export_policy_to_onnx,不是 AGENTS.md 写的 export_policy_onnx):\n"
             '        export_model_dir = os.path.join(os.path.dirname(resume_path), "exported")\n'
             '        runner.export_policy_to_jit(path=export_model_dir, filename="policy.pt")\n'
             '        runner.export_policy_to_onnx(path=export_model_dir, filename="policy.onnx")\n'
