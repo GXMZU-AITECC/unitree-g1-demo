@@ -3,7 +3,8 @@ name: docs-and-scripts
 # 便宜且能挡住最常见的一类返工：内链断了、脚本改崩了语法。
 # 本地先跑一遍再提 PR：
 #   python3 scripts/check_links.py .
-#   bash -n scripts/*.sh
+#   git ls-files -z -- '*.sh' | xargs -0 -r -n 1 bash -n
+#   git ls-files -z -- '*.py' | xargs -0 -r python3 -m py_compile
 
 on:
   push:
@@ -25,11 +26,7 @@ jobs:
 
       - name: Shell scripts parse
         run: |
-          shopt -s nullglob
-          for f in scripts/*.sh deploy/*.sh; do
-            echo "bash -n $f"
-            bash -n "$f"
-          done
+          git ls-files -z -- '*.sh' | xargs -0 -r -n 1 bash -n
 
       - name: Python files parse
-        run: python3 -m compileall -q scripts configs
+        run: git ls-files -z -- '*.py' | xargs -0 -r python3 -m py_compile
